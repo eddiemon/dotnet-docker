@@ -1,35 +1,34 @@
-FROM microsoft/dotnet:2.1-sdk AS build
-WORKDIR /app
+FROM microsoft/dotnet:2.1-sdk-alpine AS build
+
+RUN apk update && apk add --no-cache git openssh
+
+WORKDIR /home
+
+RUN git clone https://github.com/dotnet/dotnet-docker.git
+
+WORKDIR /home/dotnet-docker/samples/dotnetapp
 
 # copy csproj and restore as distinct layers
-COPY *.sln .
-COPY dotnetapp/*.csproj ./dotnetapp/
-COPY utils/*.csproj ./utils/
-COPY tests/*.csproj ./tests/
 RUN dotnet restore
 
 # copy everything else and build app
-COPY . .
-WORKDIR /app/dotnetapp
+WORKDIR /home/dotnet-docker/samples/dotnetapp/dotnetapp
 RUN dotnet build
 
 
 FROM build AS testrunner
-WORKDIR /app/tests
+WORKDIR /home/dotnet-docker/samples/dotnetapp/tests
 ENTRYPOINT ["dotnet", "test", "--logger:trx"]
 
 
 FROM build AS test
-WORKDIR /app/tests
+WORKDIR /home/dotnet-docker/samples/dotnetapp/tests
 RUN dotnet test
 
 
 FROM build AS publish
-WORKDIR /app/dotnetapp
+WORKDIR /home/dotnet-docker/samples/dotnetapp/dotnetapp
 RUN dotnet publish -c Release -o out
 
-
-FROM microsoft/dotnet:2.1-runtime AS runtime
-WORKDIR /app
-COPY --from=publish /app/dotnetapp/out ./
-ENTRYPOINT ["dotnet", "dotnetapp.dll"]
+WORKDIR /home/dotnet-docker/samples/dotnetapp/dotnetapp
+ENTRYPOINT ["dotnet", "run"]

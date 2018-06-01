@@ -9,7 +9,9 @@ public static class Program
 {
     public static void Main(string[] args) 
     {
-          var defaultMessage = "Hello from .NET Core!";
+        var osNameAndVersion = System.Runtime.InteropServices.RuntimeInformation.OSDescription;
+        WriteLine("Running on " + osNameAndVersion.ToString());
+          var defaultMessage = "Hello from .NET Framework!";
           var bot = GetBot();
           var (message, withColor) = ParseArgs(args);
           var output = message == string.Empty ? $"    {defaultMessage}{bot}" : $"    {message}{bot}";
